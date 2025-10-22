@@ -1,6 +1,6 @@
 # Comprehensive SQL (MySQL) Cheat Sheet
 
-This repository contains a single, comprehensive SQL script (`database_queries.sql`) that serves as a cheat sheet and reference guide for a wide range of SQL commands, with a focus on the MySQL dialect. It is designed for developers, DBAs, and students who need a quick reference for common and advanced SQL operations.
+This repository contains a single, comprehensive SQL script (`database_queries.mysql`) that serves as a cheat sheet and reference guide for a wide range of SQL commands, with a focus on the MySQL dialect. It is designed for developers, DBAs, and students who need a quick reference for common and advanced SQL operations.
 
 ## 📖 Overview
 
@@ -19,7 +19,7 @@ git clone https://github.com/TejaNaik15/sql-complete-guide-.git
 
 **Important:** This script is intended as a reference, not to be executed in its entirety at once. Running the whole file will likely result in errors as it creates and drops the same objects sequentially.
 
-1.  **Open the `database_queries.sql` file** in your favorite SQL client or text editor (e.g., MySQL Workbench, DBeaver, VS Code).
+1.  **Open the `database_queries.mysql` file** in your favorite SQL client or text editor (e.g., MySQL Workbench, DBeaver, VS Code).
 2.  **Navigate** to the section you are interested in.
 3.  **Execute commands individually or in small, logical blocks** to understand their functionality.
 
