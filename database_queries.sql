@@ -1,0 +1,904 @@
+
+
+-- Create Database
+CREATE DATABASE company_db;
+CREATE DATABASE IF NOT EXISTS company_db;
+
+-- Show Databases
+SHOW DATABASES;
+
+-- Use Database
+USE company_db;
+
+-- Drop Database
+DROP DATABASE company_db;
+DROP DATABASE IF EXISTS company_db;
+
+-- ============================================
+-- 2. TABLE OPERATIONS (DDL - Data Definition Language)
+-- ============================================
+
+-- Create Table
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    phone VARCHAR(15),
+    hire_date DATE,
+    salary DECIMAL(10, 2),
+    department_id INT,
+    manager_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create Table with Foreign Key
+CREATE TABLE departments (
+    dept_id INT PRIMARY KEY AUTO_INCREMENT,
+    dept_name VARCHAR(50) NOT NULL,
+    location VARCHAR(100)
+);
+
+CREATE TABLE projects (
+    project_id INT PRIMARY KEY AUTO_INCREMENT,
+    project_name VARCHAR(100),
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id) ON DELETE CASCADE
+);
+
+-- Show Tables
+SHOW TABLES;
+
+-- Describe Table Structure
+DESC employees;
+DESCRIBE employees;
+
+-- Show Create Table Statement
+SHOW CREATE TABLE employees;
+
+-- Alter Table - Add Column
+ALTER TABLE employees ADD COLUMN gender CHAR(1);
+ALTER TABLE employees ADD COLUMN address VARCHAR(200) AFTER phone;
+
+-- Alter Table - Modify Column
+ALTER TABLE employees MODIFY COLUMN salary DECIMAL(12, 2);
+
+-- Alter Table - Change Column Name
+ALTER TABLE employees CHANGE COLUMN phone phone_number VARCHAR(20);
+
+-- Alter Table - Drop Column
+ALTER TABLE employees DROP COLUMN address;
+
+-- Alter Table - Add Constraint
+ALTER TABLE employees ADD CONSTRAINT fk_dept FOREIGN KEY (department_id) REFERENCES departments(dept_id);
+ALTER TABLE employees ADD CONSTRAINT chk_salary CHECK (salary > 0);
+
+-- Alter Table - Drop Constraint
+ALTER TABLE employees DROP CONSTRAINT chk_salary;
+ALTER TABLE employees DROP FOREIGN KEY fk_dept;
+
+-- Rename Table
+RENAME TABLE employees TO staff;
+ALTER TABLE staff RENAME TO employees;
+
+-- Truncate Table (Delete all data, reset auto-increment)
+TRUNCATE TABLE employees;
+
+-- Drop Table
+DROP TABLE employees;
+DROP TABLE IF EXISTS employees;
+
+-- ============================================
+-- 3. DML (Data Manipulation Language)
+-- ============================================
+
+-- INSERT
+-- Single Row Insert
+INSERT INTO employees (first_name, last_name, email, salary, department_id)
+VALUES ('John', 'Doe', 'john.doe@email.com', 50000, 1);
+
+-- Multiple Rows Insert
+INSERT INTO employees (first_name, last_name, email, salary, department_id)
+VALUES 
+    ('Jane', 'Smith', 'jane.smith@email.com', 60000, 2),
+    ('Bob', 'Johnson', 'bob.johnson@email.com', 55000, 1),
+    ('Alice', 'Williams', 'alice.williams@email.com', 65000, 3);
+
+-- Insert from Another Table
+INSERT INTO employees_backup 
+SELECT * FROM employees WHERE department_id = 1;
+
+-- UPDATE
+-- Update Single Row
+UPDATE employees 
+SET salary = 55000 
+WHERE emp_id = 1;
+
+-- Update Multiple Columns
+UPDATE employees 
+SET salary = salary * 1.1, 
+    updated_at = NOW() 
+WHERE department_id = 2;
+
+-- Update with JOIN
+UPDATE employees e
+JOIN departments d ON e.department_id = d.dept_id
+SET e.salary = e.salary * 1.15
+WHERE d.dept_name = 'IT';
+
+-- DELETE
+-- Delete Specific Rows
+DELETE FROM employees WHERE emp_id = 5;
+
+-- Delete with Condition
+DELETE FROM employees WHERE salary < 40000;
+
+-- Delete with JOIN
+DELETE e FROM employees e
+JOIN departments d ON e.department_id = d.dept_id
+WHERE d.dept_name = 'Sales';
+
+-- Delete All Rows (but keeps table structure)
+DELETE FROM employees;
+
+-- ============================================
+-- 4. DQL (Data Query Language) - SELECT
+-- ============================================
+
+-- Basic SELECT
+SELECT * FROM employees;
+SELECT first_name, last_name, salary FROM employees;
+
+-- SELECT with DISTINCT
+SELECT DISTINCT department_id FROM employees;
+
+-- SELECT with WHERE
+SELECT * FROM employees WHERE salary > 50000;
+SELECT * FROM employees WHERE department_id = 1 AND salary > 45000;
+SELECT * FROM employees WHERE department_id = 1 OR department_id = 2;
+
+-- SELECT with LIKE (Pattern Matching)
+SELECT * FROM employees WHERE first_name LIKE 'J%';  -- Starts with J
+SELECT * FROM employees WHERE email LIKE '%@gmail.com';  -- Ends with @gmail.com
+SELECT * FROM employees WHERE first_name LIKE '%oh%';  -- Contains 'oh'
+SELECT * FROM employees WHERE first_name LIKE '_ohn';  -- _ matches single character
+
+-- SELECT with IN
+SELECT * FROM employees WHERE department_id IN (1, 2, 3);
+SELECT * FROM employees WHERE first_name IN ('John', 'Jane', 'Bob');
+
+-- SELECT with BETWEEN
+SELECT * FROM employees WHERE salary BETWEEN 40000 AND 60000;
+SELECT * FROM employees WHERE hire_date BETWEEN '2020-01-01' AND '2023-12-31';
+
+-- SELECT with IS NULL / IS NOT NULL
+SELECT * FROM employees WHERE manager_id IS NULL;
+SELECT * FROM employees WHERE email IS NOT NULL;
+
+-- SELECT with ORDER BY
+SELECT * FROM employees ORDER BY salary DESC;
+SELECT * FROM employees ORDER BY department_id ASC, salary DESC;
+
+-- SELECT with LIMIT
+SELECT * FROM employees LIMIT 10;
+SELECT * FROM employees LIMIT 5 OFFSET 10;  -- Skip first 10, get next 5
+SELECT * FROM employees ORDER BY salary DESC LIMIT 5;  -- Top 5 earners
+
+-- ============================================
+-- 5. AGGREGATE FUNCTIONS
+-- ============================================
+
+-- COUNT
+SELECT COUNT(*) FROM employees;
+SELECT COUNT(manager_id) FROM employees;  -- Excludes NULL
+SELECT COUNT(DISTINCT department_id) FROM employees;
+
+-- SUM
+SELECT SUM(salary) FROM employees;
+SELECT SUM(salary) FROM employees WHERE department_id = 1;
+
+-- AVG
+SELECT AVG(salary) FROM employees;
+SELECT AVG(salary) AS average_salary FROM employees;
+
+-- MIN and MAX
+SELECT MIN(salary) FROM employees;
+SELECT MAX(salary) FROM employees;
+SELECT MIN(hire_date), MAX(hire_date) FROM employees;
+
+-- ============================================
+-- 6. GROUP BY and HAVING
+-- ============================================
+
+-- GROUP BY
+SELECT department_id, COUNT(*) AS employee_count
+FROM employees
+GROUP BY department_id;
+
+SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id;
+
+-- GROUP BY with Multiple Columns
+SELECT department_id, gender, COUNT(*) AS count
+FROM employees
+GROUP BY department_id, gender;
+
+-- HAVING (Filter after GROUP BY)
+SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) > 50000;
+
+SELECT department_id, COUNT(*) AS emp_count
+FROM employees
+GROUP BY department_id
+HAVING COUNT(*) > 5;
+
+-- WHERE vs HAVING
+SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+WHERE salary > 40000  -- Filter before grouping
+GROUP BY department_id
+HAVING AVG(salary) > 55000;  -- Filter after grouping
+
+-- ============================================
+-- 7. JOINS
+-- ============================================
+
+-- INNER JOIN
+SELECT e.first_name, e.last_name, d.dept_name
+FROM employees e
+INNER JOIN departments d ON e.department_id = d.dept_id;
+
+-- LEFT JOIN (LEFT OUTER JOIN)
+SELECT e.first_name, e.last_name, d.dept_name
+FROM employees e
+LEFT JOIN departments d ON e.department_id = d.dept_id;
+
+-- RIGHT JOIN (RIGHT OUTER JOIN)
+SELECT e.first_name, e.last_name, d.dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.department_id = d.dept_id;
+
+-- FULL OUTER JOIN (MySQL doesn't support directly, use UNION)
+SELECT e.first_name, e.last_name, d.dept_name
+FROM employees e
+LEFT JOIN departments d ON e.department_id = d.dept_id
+UNION
+SELECT e.first_name, e.last_name, d.dept_name
+FROM employees e
+RIGHT JOIN departments d ON e.department_id = d.dept_id;
+
+-- CROSS JOIN
+SELECT e.first_name, d.dept_name
+FROM employees e
+CROSS JOIN departments d;
+
+-- SELF JOIN
+SELECT e1.first_name AS employee, e2.first_name AS manager
+FROM employees e1
+LEFT JOIN employees e2 ON e1.manager_id = e2.emp_id;
+
+-- Multiple JOINS
+SELECT e.first_name, d.dept_name, p.project_name
+FROM employees e
+INNER JOIN departments d ON e.department_id = d.dept_id
+INNER JOIN projects p ON d.dept_id = p.dept_id;
+
+-- ============================================
+-- 8. SUBQUERIES
+-- ============================================
+
+-- Subquery in WHERE
+SELECT * FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+
+-- Subquery with IN
+SELECT * FROM employees
+WHERE department_id IN (SELECT dept_id FROM departments WHERE location = 'New York');
+
+-- Subquery in SELECT
+SELECT first_name, salary,
+    (SELECT AVG(salary) FROM employees) AS avg_salary
+FROM employees;
+
+-- Correlated Subquery
+SELECT e1.first_name, e1.salary
+FROM employees e1
+WHERE salary > (SELECT AVG(salary) FROM employees e2 WHERE e1.department_id = e2.department_id);
+
+-- Subquery with EXISTS
+SELECT * FROM departments d
+WHERE EXISTS (SELECT 1 FROM employees e WHERE e.department_id = d.dept_id);
+
+-- Subquery in FROM
+SELECT dept_id, avg_sal
+FROM (SELECT department_id AS dept_id, AVG(salary) AS avg_sal FROM employees GROUP BY department_id) AS dept_avg
+WHERE avg_sal > 50000;
+
+-- ============================================
+-- 9. SET OPERATIONS
+-- ============================================
+
+-- UNION (Remove duplicates)
+SELECT first_name FROM employees
+UNION
+SELECT dept_name FROM departments;
+
+-- UNION ALL (Keep duplicates)
+SELECT first_name FROM employees
+UNION ALL
+SELECT first_name FROM employees_archive;
+
+-- INTERSECT (MySQL 8.0+)
+SELECT first_name FROM employees
+INTERSECT
+SELECT first_name FROM managers;
+
+-- EXCEPT / MINUS
+SELECT first_name FROM employees
+EXCEPT
+SELECT first_name FROM managers;
+
+-- ============================================
+-- 10. VIEWS
+-- ============================================
+
+-- Create View
+CREATE VIEW employee_details AS
+SELECT e.first_name, e.last_name, d.dept_name, e.salary
+FROM employees e
+JOIN departments d ON e.department_id = d.dept_id;
+
+-- Use View
+SELECT * FROM employee_details;
+
+-- Create or Replace View
+CREATE OR REPLACE VIEW high_earners AS
+SELECT * FROM employees WHERE salary > 60000;
+
+-- Drop View
+DROP VIEW employee_details;
+DROP VIEW IF EXISTS employee_details;
+
+-- ============================================
+-- 11. INDEXES
+-- ============================================
+
+-- Create Index
+CREATE INDEX idx_last_name ON employees(last_name);
+
+-- Create Unique Index
+CREATE UNIQUE INDEX idx_email ON employees(email);
+
+-- Create Composite Index
+CREATE INDEX idx_dept_salary ON employees(department_id, salary);
+
+-- Show Indexes
+SHOW INDEXES FROM employees;
+
+-- Drop Index
+DROP INDEX idx_last_name ON employees;
+ALTER TABLE employees DROP INDEX idx_last_name;
+
+-- ============================================
+-- 12. CONSTRAINTS
+-- ============================================
+
+-- PRIMARY KEY
+CREATE TABLE test1 (
+    id INT PRIMARY KEY,
+    name VARCHAR(50)
+);
+
+-- FOREIGN KEY
+CREATE TABLE test2 (
+    id INT PRIMARY KEY,
+    test1_id INT,
+    FOREIGN KEY (test1_id) REFERENCES test1(id)
+);
+
+-- UNIQUE
+CREATE TABLE test3 (
+    id INT PRIMARY KEY,
+    email VARCHAR(100) UNIQUE
+);
+
+-- NOT NULL
+CREATE TABLE test4 (
+    id INT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+-- CHECK
+CREATE TABLE test5 (
+    id INT PRIMARY KEY,
+    age INT CHECK (age >= 18)
+);
+
+-- DEFAULT
+CREATE TABLE test6 (
+    id INT PRIMARY KEY,
+    status VARCHAR(20) DEFAULT 'active'
+);
+
+-- ============================================
+-- 13. STRING FUNCTIONS
+-- ============================================
+
+SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employees;
+SELECT CONCAT_WS('-', first_name, last_name, email) FROM employees;
+SELECT UPPER(first_name) FROM employees;
+SELECT LOWER(first_name) FROM employees;
+SELECT LENGTH(first_name) FROM employees;
+SELECT SUBSTRING(first_name, 1, 3) FROM employees;
+SELECT LEFT(first_name, 3) FROM employees;
+SELECT RIGHT(first_name, 3) FROM employees;
+SELECT TRIM('  Hello  ') AS trimmed;
+SELECT LTRIM('  Hello') AS left_trimmed;
+SELECT RTRIM('Hello  ') AS right_trimmed;
+SELECT REPLACE(email, '@gmail.com', '@company.com') FROM employees;
+SELECT REVERSE(first_name) FROM employees;
+SELECT LOCATE('J', first_name) FROM employees;
+SELECT INSTR(first_name, 'o') FROM employees;
+
+-- ============================================
+-- 14. NUMERIC FUNCTIONS
+-- ============================================
+
+SELECT ABS(-10) AS absolute_value;
+SELECT CEIL(4.3) AS ceiling_value;
+SELECT FLOOR(4.7) AS floor_value;
+SELECT ROUND(4.567, 2) AS rounded_value;
+SELECT TRUNCATE(4.567, 1) AS truncated_value;
+SELECT POW(2, 3) AS power_value;
+SELECT SQRT(16) AS square_root;
+SELECT MOD(10, 3) AS modulo;
+SELECT RAND() AS random_number;
+SELECT GREATEST(10, 20, 30) AS max_value;
+SELECT LEAST(10, 20, 30) AS min_value;
+
+-- ============================================
+-- 15. DATE AND TIME FUNCTIONS
+-- ============================================
+
+SELECT NOW();
+SELECT CURDATE();
+SELECT CURTIME();
+SELECT DATE(NOW());
+SELECT TIME(NOW());
+SELECT YEAR(hire_date) FROM employees;
+SELECT MONTH(hire_date) FROM employees;
+SELECT DAY(hire_date) FROM employees;
+SELECT DAYNAME(hire_date) FROM employees;
+SELECT MONTHNAME(hire_date) FROM employees;
+SELECT WEEK(hire_date) FROM employees;
+SELECT QUARTER(hire_date) FROM employees;
+SELECT DATE_ADD(hire_date, INTERVAL 1 YEAR) FROM employees;
+SELECT DATE_SUB(hire_date, INTERVAL 1 MONTH) FROM employees;
+SELECT DATEDIFF(NOW(), hire_date) AS days_employed FROM employees;
+SELECT TIMESTAMPDIFF(YEAR, hire_date, NOW()) AS years_employed FROM employees;
+SELECT DATE_FORMAT(hire_date, '%Y-%m-%d') FROM employees;
+SELECT DATE_FORMAT(hire_date, '%W, %M %d, %Y') FROM employees;
+SELECT STR_TO_DATE('2023-01-15', '%Y-%m-%d');
+
+-- ============================================
+-- 16. CONDITIONAL FUNCTIONS
+-- ============================================
+
+-- IF Function
+SELECT first_name, salary,
+    IF(salary > 50000, 'High', 'Low') AS salary_category
+FROM employees;
+
+-- CASE Statement
+SELECT first_name, salary,
+    CASE
+        WHEN salary > 70000 THEN 'Senior'
+        WHEN salary > 50000 THEN 'Mid-Level'
+        ELSE 'Junior'
+    END AS level
+FROM employees;
+
+-- IFNULL
+SELECT first_name, IFNULL(manager_id, 'No Manager') FROM employees;
+
+-- COALESCE
+SELECT first_name, COALESCE(manager_id, department_id, 0) FROM employees;
+
+-- NULLIF
+SELECT NULLIF(salary, 50000) FROM employees;
+
+-- ============================================
+-- 17. WINDOW FUNCTIONS (MySQL 8.0+)
+-- ============================================
+
+-- ROW_NUMBER
+SELECT first_name, salary,
+    ROW_NUMBER() OVER (ORDER BY salary DESC) AS row_num
+FROM employees;
+
+-- RANK
+SELECT first_name, salary,
+    RANK() OVER (ORDER BY salary DESC) AS rank
+FROM employees;
+
+-- DENSE_RANK
+SELECT first_name, salary,
+    DENSE_RANK() OVER (ORDER BY salary DESC) AS dense_rank
+FROM employees;
+
+-- PARTITION BY
+SELECT first_name, department_id, salary,
+    ROW_NUMBER() OVER (PARTITION BY department_id ORDER BY salary DESC) AS dept_rank
+FROM employees;
+
+-- LAG and LEAD
+SELECT first_name, salary,
+    LAG(salary, 1) OVER (ORDER BY salary) AS prev_salary,
+    LEAD(salary, 1) OVER (ORDER BY salary) AS next_salary
+FROM employees;
+
+-- FIRST_VALUE and LAST_VALUE
+SELECT first_name, salary,
+    FIRST_VALUE(salary) OVER (ORDER BY salary) AS lowest_salary,
+    LAST_VALUE(salary) OVER (ORDER BY salary ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS highest_salary
+FROM employees;
+
+-- NTH_VALUE
+SELECT first_name, salary,
+    NTH_VALUE(salary, 2) OVER (ORDER BY salary DESC) AS second_highest
+FROM employees;
+
+-- ============================================
+-- 18. COMMON TABLE EXPRESSIONS (CTE)
+-- ============================================
+
+-- Simple CTE
+WITH high_earners AS (
+    SELECT * FROM employees WHERE salary > 60000
+)
+SELECT * FROM high_earners;
+
+-- Multiple CTEs
+WITH 
+    dept_avg AS (
+        SELECT department_id, AVG(salary) AS avg_sal FROM employees GROUP BY department_id
+    ),
+    dept_count AS (
+        SELECT department_id, COUNT(*) AS emp_count FROM employees GROUP BY department_id
+    )
+SELECT da.department_id, da.avg_sal, dc.emp_count
+FROM dept_avg da
+JOIN dept_count dc ON da.department_id = dc.department_id;
+
+-- Recursive CTE
+WITH RECURSIVE employee_hierarchy AS (
+    SELECT emp_id, first_name, manager_id, 1 AS level
+    FROM employees
+    WHERE manager_id IS NULL
+    UNION ALL
+    SELECT e.emp_id, e.first_name, e.manager_id, eh.level + 1
+    FROM employees e
+    JOIN employee_hierarchy eh ON e.manager_id = eh.emp_id
+)
+SELECT * FROM employee_hierarchy;
+
+-- ============================================
+-- 19. TRANSACTIONS
+-- ============================================
+
+-- Start Transaction
+START TRANSACTION;
+-- or
+BEGIN;
+
+-- Execute Queries
+UPDATE employees SET salary = salary + 5000 WHERE emp_id = 1;
+INSERT INTO audit_log (action, timestamp) VALUES ('Salary Updated', NOW());
+
+-- Commit Transaction
+COMMIT;
+
+-- Rollback Transaction
+ROLLBACK;
+
+-- Savepoint
+START TRANSACTION;
+UPDATE employees SET salary = salary + 1000 WHERE department_id = 1;
+SAVEPOINT sp1;
+UPDATE employees SET salary = salary + 2000 WHERE department_id = 2;
+ROLLBACK TO SAVEPOINT sp1;  -- Rollback to sp1
+COMMIT;
+
+-- ============================================
+-- 20. STORED PROCEDURES
+-- ============================================
+
+-- Create Procedure
+DELIMITER //
+CREATE PROCEDURE GetEmployeesByDept(IN dept_id INT)
+BEGIN
+    SELECT * FROM employees WHERE department_id = dept_id;
+END //
+DELIMITER ;
+
+-- Call Procedure
+CALL GetEmployeesByDept(1);
+
+-- Procedure with OUT Parameter
+DELIMITER //
+CREATE PROCEDURE GetEmployeeCount(OUT emp_count INT)
+BEGIN
+    SELECT COUNT(*) INTO emp_count FROM employees;
+END //
+DELIMITER ;
+
+-- Call and Get Output
+CALL GetEmployeeCount(@count);
+SELECT @count;
+
+-- Drop Procedure
+DROP PROCEDURE GetEmployeesByDept;
+DROP PROCEDURE IF EXISTS GetEmployeesByDept;
+
+-- ============================================
+-- 21. FUNCTIONS (User-Defined)
+-- ============================================
+
+-- Create Function
+DELIMITER //
+CREATE FUNCTION CalculateBonus(salary DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE bonus DECIMAL(10,2);
+    SET bonus = salary * 0.10;
+    RETURN bonus;
+END //
+DELIMITER ;
+
+-- Use Function
+SELECT first_name, salary, CalculateBonus(salary) AS bonus FROM employees;
+
+-- Drop Function
+DROP FUNCTION CalculateBonus;
+DROP FUNCTION IF EXISTS CalculateBonus;
+
+-- ============================================
+-- 22. TRIGGERS
+-- ============================================
+
+-- Create BEFORE INSERT Trigger
+DELIMITER //
+CREATE TRIGGER before_employee_insert
+BEFORE INSERT ON employees
+FOR EACH ROW
+BEGIN
+    SET NEW.created_at = NOW();
+END //
+DELIMITER ;
+
+-- Create AFTER UPDATE Trigger
+DELIMITER //
+CREATE TRIGGER after_employee_update
+AFTER UPDATE ON employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_log (emp_id, old_salary, new_salary, change_date)
+    VALUES (NEW.emp_id, OLD.salary, NEW.salary, NOW());
+END //
+DELIMITER ;
+
+-- Show Triggers
+SHOW TRIGGERS;
+
+-- Drop Trigger
+DROP TRIGGER before_employee_insert;
+DROP TRIGGER IF EXISTS before_employee_insert;
+
+-- ============================================
+-- 23. USER MANAGEMENT
+-- ============================================
+
+-- Create User
+CREATE USER 'john'@'localhost' IDENTIFIED BY 'password123';
+CREATE USER 'jane'@'%' IDENTIFIED BY 'password456';  -- % means any host
+
+-- Grant Privileges
+GRANT ALL PRIVILEGES ON company_db.* TO 'john'@'localhost';
+GRANT SELECT, INSERT ON company_db.employees TO 'jane'@'%';
+GRANT SELECT ON company_db.* TO 'readonly'@'localhost';
+
+-- Show Grants
+SHOW GRANTS FOR 'john'@'localhost';
+
+-- Revoke Privileges
+REVOKE INSERT ON company_db.employees FROM 'jane'@'%';
+
+-- Drop User
+DROP USER 'john'@'localhost';
+
+-- Change Password
+ALTER USER 'jane'@'%' IDENTIFIED BY 'newpassword789';
+
+-- Flush Privileges
+FLUSH PRIVILEGES;
+
+-- ============================================
+-- 24. PERFORMANCE OPTIMIZATION
+-- ============================================
+
+-- EXPLAIN (Query Execution Plan)
+EXPLAIN SELECT * FROM employees WHERE salary > 50000;
+EXPLAIN ANALYZE SELECT * FROM employees WHERE salary > 50000;
+
+-- Show Table Status
+SHOW TABLE STATUS LIKE 'employees';
+
+-- Analyze Table
+ANALYZE TABLE employees;
+
+-- Optimize Table
+OPTIMIZE TABLE employees;
+
+-- ============================================
+-- 25. ADVANCED QUERIES
+-- ============================================
+
+-- Find Nth Highest Salary
+SELECT DISTINCT salary 
+FROM employees 
+ORDER BY salary DESC 
+LIMIT 1 OFFSET 1;  -- 2nd highest
+
+-- Find Duplicate Records
+SELECT email, COUNT(*) 
+FROM employees 
+GROUP BY email 
+HAVING COUNT(*) > 1;
+
+-- Delete Duplicate Records (Keep one)
+DELETE e1 FROM employees e1
+INNER JOIN employees e2
+WHERE e1.emp_id > e2.emp_id AND e1.email = e2.email;
+
+-- Find Employees with No Manager
+SELECT * FROM employees WHERE manager_id IS NULL;
+
+-- Find Departments with No Employees
+SELECT d.* FROM departments d
+LEFT JOIN employees e ON d.dept_id = e.department_id
+WHERE e.emp_id IS NULL;
+
+-- Running Total
+SELECT emp_id, salary,
+    SUM(salary) OVER (ORDER BY emp_id) AS running_total
+FROM employees;
+
+-- Moving Average
+SELECT emp_id, salary,
+    AVG(salary) OVER (ORDER BY emp_id ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS moving_avg
+FROM employees;
+
+-- Pivot Table Simulation
+SELECT 
+    department_id,
+    SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS male_count,
+    SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS female_count
+FROM employees
+GROUP BY department_id;
+
+-- ============================================
+-- 26. JSON OPERATIONS (MySQL 5.7+)
+-- ============================================
+
+-- Create Table with JSON
+CREATE TABLE user_profiles (
+    user_id INT PRIMARY KEY,
+    profile JSON
+);
+
+-- Insert JSON Data
+INSERT INTO user_profiles VALUES 
+(1, '{"name": "John", "age": 30, "skills": ["SQL", "Python"]}');
+
+-- Query JSON Data
+SELECT user_id, JSON_EXTRACT(profile, '$.name') AS name FROM user_profiles;
+SELECT user_id, profile->'$.name' AS name FROM user_profiles;  -- Shorthand
+SELECT user_id, profile->>'$.name' AS name FROM user_profiles;  -- Unquoted
+
+-- Update JSON Data
+UPDATE user_profiles 
+SET profile = JSON_SET(profile, '$.age', 31) 
+WHERE user_id = 1;
+
+-- JSON Array Functions
+SELECT JSON_ARRAY('a', 'b', 'c');
+SELECT JSON_OBJECT('name', 'John', 'age', 30);
+
+-- ============================================
+-- 27. REGULAR EXPRESSIONS
+-- ============================================
+
+-- REGEXP / RLIKE
+SELECT * FROM employees WHERE first_name REGEXP '^J';  -- Starts with J
+SELECT * FROM employees WHERE email REGEXP '@gmail\\.com$';  -- Ends with @gmail.com
+SELECT * FROM employees WHERE first_name REGEXP '[aeiou]{2}';  -- Contains 2 vowels together
+
+-- ============================================
+-- 28. BACKUP AND RESTORE (Command Line)
+-- ============================================
+
+-- Backup Database (Run in terminal)
+-- mysqldump -u username -p database_name > backup.sql
+
+-- Backup Specific Table
+-- mysqldump -u username -p database_name table_name > table_backup.sql
+
+-- Restore Database
+-- mysql -u username -p database_name < backup.sql
+
+-- ============================================
+-- 29. MISCELLANEOUS
+-- ============================================
+
+-- Show Current User
+SELECT USER();
+SELECT CURRENT_USER();
+
+-- Show Database Version
+SELECT VERSION();
+
+-- Show Current Database
+SELECT DATABASE();
+
+-- Show System Variables
+SHOW VARIABLES;
+SHOW VARIABLES LIKE 'max_connections';
+
+-- Show Status
+SHOW STATUS;
+SHOW STATUS LIKE 'Threads_connected';
+
+-- Show Process List
+SHOW PROCESSLIST;
+SHOW FULL PROCESSLIST;
+
+-- Kill Process
+KILL 123;  -- 123 is process ID
+
+-- Set Variables
+SET @var_name = 'value';
+SELECT @var_name;
+
+-- Sleep (Wait)
+SELECT SLEEP(5);  -- Wait 5 seconds
+
+-- ============================================
+-- 30. BEST PRACTICES
+-- ============================================
+
+/*
+1. Always use WHERE clause in UPDATE and DELETE to avoid modifying all rows
+2. Use LIMIT with DELETE for safety
+3. Use transactions for critical operations
+4. Create indexes on frequently queried columns
+5. Avoid SELECT * in production, specify columns
+6. Use prepared statements to prevent SQL injection
+7. Regular backups
+8. Optimize queries using EXPLAIN
+9. Use appropriate data types
+10. Normalize database design to reduce redundancy
+*/
+
+-- Example: Safe DELETE with LIMIT
+DELETE FROM employees WHERE salary < 40000 LIMIT 10;
+
+-- Example: Prepared Statement Pattern (In application code)
+-- PREPARE stmt FROM 'SELECT * FROM employees WHERE emp_id = ?';
+-- SET @id = 1;
+-- EXECUTE stmt USING @id;
+-- DEALLOCATE PREPARE stmt;
