@@ -791,6 +791,43 @@ SELECT
 FROM employees
 GROUP BY department_id;
 
+-- Find Top N Employees per Department by Salary
+WITH RankedEmployees AS (
+    SELECT
+        first_name,
+        last_name,
+        salary,
+        department_id,
+        ROW_NUMBER() OVER (PARTITION BY department_id ORDER BY salary DESC) as rn
+    FROM employees
+)
+SELECT * FROM RankedEmployees WHERE rn <= 2; -- Top 2 employees per department
+
+-- Unpivot Data (e.g., from columns to rows)
+-- Assuming a table 'quarterly_sales' with columns: product_id, q1_sales, q2_sales, q3_sales, q4_sales
+/*
+SELECT product_id, 'Q1' as quarter, q1_sales as sales FROM quarterly_sales
+UNION ALL
+SELECT product_id, 'Q2' as quarter, q2_sales as sales FROM quarterly_sales
+UNION ALL
+SELECT product_id, 'Q3' as quarter, q3_sales as sales FROM quarterly_sales
+UNION ALL
+SELECT product_id, 'Q4' as quarter, q4_sales as sales FROM quarterly_sales;
+*/
+
+-- String Aggregation per Group
+SELECT
+    d.dept_name,
+    GROUP_CONCAT(e.first_name ORDER BY e.salary DESC SEPARATOR ', ') AS employees_in_dept
+FROM employees e
+JOIN departments d ON e.department_id = d.dept_id
+GROUP BY d.dept_name;
+
+-- Find Median Salary (MySQL 8.0+)
+SELECT DISTINCT
+   PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) OVER () AS median_salary
+FROM employees;
+
 -- ============================================
 -- 26. JSON OPERATIONS (MySQL 5.7+)
 -- ============================================
