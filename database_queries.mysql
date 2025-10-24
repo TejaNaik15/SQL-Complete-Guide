@@ -828,6 +828,47 @@ SELECT DISTINCT
    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) OVER () AS median_salary
 FROM employees;
 
+-- Calculate Contribution to Total (e.g., Department Salary as % of Total Salary)
+WITH DeptTotal AS (
+    SELECT
+        d.dept_name,
+        SUM(e.salary) as department_salary
+    FROM employees e
+    JOIN departments d ON e.department_id = d.dept_id
+    GROUP BY d.dept_name
+)
+SELECT
+    dept_name,
+    department_salary,
+    (department_salary / (SELECT SUM(salary) FROM employees)) * 100 AS percentage_of_total
+FROM DeptTotal;
+
+-- Gaps and Islands: Find Consecutive Available Dates
+-- Assuming a table 'doctor_schedule' with columns: doctor_id, schedule_date, is_available (1 or 0)
+/*
+WITH DateGaps AS (
+    SELECT
+        schedule_date,
+        is_available,
+        DATE_SUB(schedule_date, INTERVAL ROW_NUMBER() OVER(PARTITION BY doctor_id, is_available ORDER BY schedule_date) DAY) as group_date
+    FROM doctor_schedule
+    WHERE is_available = 1
+)
+SELECT
+    doctor_id,
+    MIN(schedule_date) as island_start,
+    MAX(schedule_date) as island_end,
+    COUNT(*) as consecutive_days
+FROM DateGaps
+GROUP BY doctor_id, group_date
+HAVING COUNT(*) > 1; -- Find islands of 2 or more consecutive days
+*/
+
+-- Using JSON_TABLE to shred JSON array into rows (MySQL 8.0+)
+SELECT p.user_id, j.*
+FROM user_profiles p,
+     JSON_TABLE(p.profile, '$.skills[*]' COLUMNS (skill VARCHAR(50) PATH '$')) AS j;
+
 -- ============================================
 -- 26. JSON OPERATIONS (MySQL 5.7+)
 -- ============================================
